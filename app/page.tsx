@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import ThemeToggle from '@/app/components/ThemeToggle';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import ThemeToggle from "@/app/components/ThemeToggle";
 
-const OWNER_TAGS = ['Wang', 'LYY'] as const;
+const OWNER_TAGS = ["Wang", "LYY"] as const;
 type OwnerTag = (typeof OWNER_TAGS)[number];
-type ReadFilter = 'all' | 'read' | 'unread';
+type ReadFilter = "all" | "read" | "unread";
 
 interface Article {
   id: string;
   title: string;
-  status: 'pending' | 'processing' | 'ready' | 'failed';
+  status: "pending" | "processing" | "ready" | "failed";
   createdAt: string;
   originalUrl?: string;
   ownerTag: OwnerTag;
@@ -20,18 +20,20 @@ interface Article {
 }
 
 const readFilterLabels: Record<ReadFilter, string> = {
-  all: '全部',
-  unread: '未读',
-  read: '已读',
+  all: "全部",
+  unread: "未读",
+  read: "已读",
 };
 
 export default function Home() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [ownerFilter, setOwnerFilter] = useState<OwnerTag>('Wang');
-  const [readFilter, setReadFilter] = useState<ReadFilter>('all');
-  const [updatingArticleId, setUpdatingArticleId] = useState<string | null>(null);
+  const [ownerFilter, setOwnerFilter] = useState<OwnerTag>("Wang");
+  const [readFilter, setReadFilter] = useState<ReadFilter>("all");
+  const [updatingArticleId, setUpdatingArticleId] = useState<string | null>(
+    null,
+  );
 
   const fetchArticles = useCallback(async () => {
     try {
@@ -39,15 +41,15 @@ export default function Home() {
       setError(null);
 
       const params = new URLSearchParams();
-      params.set('ownerTag', ownerFilter);
-      params.set('read', readFilter);
+      params.set("ownerTag", ownerFilter);
+      params.set("read", readFilter);
 
       const response = await fetch(`/api/articles?${params.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch articles');
+      if (!response.ok) throw new Error("Failed to fetch articles");
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load articles');
+      setError(err instanceof Error ? err.message : "Failed to load articles");
     } finally {
       setLoading(false);
     }
@@ -57,59 +59,64 @@ export default function Home() {
     fetchArticles();
   }, [fetchArticles]);
 
-  const getStatusBadge = (status: Article['status']) => {
+  const getStatusBadge = (status: Article["status"]) => {
     const styles = {
-      pending: 'status-badge-pending',
-      processing: 'status-badge-processing',
-      ready: 'status-badge-ready',
-      failed: 'status-badge-failed',
+      pending: "status-badge-pending",
+      processing: "status-badge-processing",
+      ready: "status-badge-ready",
+      failed: "status-badge-failed",
     };
-    return (
-      <span className={`status-badge ${styles[status]}`}>
-        {status}
-      </span>
-    );
+    return <span className={`status-badge ${styles[status]}`}>{status}</span>;
   };
 
-  const toggleReadStatus = async (articleId: string, currentStatus: boolean) => {
+  const toggleReadStatus = async (
+    articleId: string,
+    currentStatus: boolean,
+  ) => {
     try {
       setUpdatingArticleId(articleId);
       const response = await fetch(`/api/articles/${articleId}/read`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isRead: !currentStatus }),
       });
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || '更新已读状态失败');
+        throw new Error(data.error || "更新已读状态失败");
       }
 
       const data = await response.json();
-      const updated = data.article as { id: string; isRead: boolean; readAt: string | null };
+      const updated = data.article as {
+        id: string;
+        isRead: boolean;
+        readAt: string | null;
+      };
 
       setArticles((prev) =>
         prev.map((article) =>
           article.id === updated.id
             ? { ...article, isRead: updated.isRead, readAt: updated.readAt }
-            : article
-        )
+            : article,
+        ),
       );
 
-      if (readFilter !== 'all') {
+      if (readFilter !== "all") {
         setArticles((prev) =>
-          prev.filter((article) => (readFilter === 'read' ? article.isRead : !article.isRead))
+          prev.filter((article) =>
+            readFilter === "read" ? article.isRead : !article.isRead,
+          ),
         );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '更新已读状态失败');
+      setError(err instanceof Error ? err.message : "更新已读状态失败");
     } finally {
       setUpdatingArticleId(null);
     }
   };
 
   const emptyMessage = useMemo(() => {
-    if (readFilter === 'read') return `${ownerFilter} 还没有已读文章`;
-    if (readFilter === 'unread') return `${ownerFilter} 还没有未读文章`;
+    if (readFilter === "read") return `${ownerFilter} 还没有已读文章`;
+    if (readFilter === "unread") return `${ownerFilter} 还没有未读文章`;
     return `${ownerFilter} 还没有文章`;
   }, [ownerFilter, readFilter]);
 
@@ -152,8 +159,8 @@ export default function Home() {
                   onClick={() => setOwnerFilter(owner)}
                   className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                     active
-                      ? 'border-[color:var(--accent)] bg-[color:color-mix(in_srgb,var(--accent)_14%,var(--background-elevated))] text-[color:var(--accent)]'
-                      : 'border-[color:var(--border)] bg-[color:var(--background-elevated)] text-[color:var(--foreground-secondary)]'
+                      ? "border-[color:var(--accent)] bg-[color:color-mix(in_srgb,var(--accent)_14%,var(--background-elevated))] text-[color:var(--accent)]"
+                      : "border-[color:var(--border)] bg-[color:var(--background-elevated)] text-[color:var(--foreground-secondary)]"
                   }`}
                 >
                   {owner}
@@ -170,27 +177,41 @@ export default function Home() {
           <button
             type="button"
             onClick={() => {
-              const filters: ReadFilter[] = ['all', 'unread', 'read'];
+              const filters: ReadFilter[] = ["all", "unread", "read"];
               const currentIndex = filters.indexOf(readFilter);
               const nextIndex = (currentIndex + 1) % filters.length;
               setReadFilter(filters[nextIndex]);
             }}
             title={`当前状态: ${readFilterLabels[readFilter]} (点击切换)`}
-            className={`flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
-              readFilter === 'all'
-                ? 'border-[color:var(--border)] bg-[color:var(--background-muted)]'
-                : readFilter === 'read'
-                  ? 'border-[color:color-mix(in_srgb,var(--success)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_14%,var(--background-elevated))]'
-                  : 'border-[color:color-mix(in_srgb,var(--warning)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_14%,var(--background-elevated))]'
+            className={`flex h-6 w-6 items-center justify-center rounded-full border transition-colors ${
+              readFilter === "all"
+                ? "border-[color:var(--border)] bg-[color:var(--background-muted)]"
+                : readFilter === "read"
+                  ? "border-[color:color-mix(in_srgb,var(--success)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_14%,var(--background-elevated))]"
+                  : "border-[color:color-mix(in_srgb,var(--warning)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_14%,var(--background-elevated))]"
             }`}
           >
-            {readFilter === 'all' && <div className="h-3 w-3 rounded-full bg-[color:var(--foreground-tertiary)]" />}
-            {readFilter === 'read' && (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="h-4 w-4 text-[color:var(--success)]">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            {readFilter === "all" && (
+              <div className="h-3 w-3 rounded-full bg-[color:var(--foreground-tertiary)]" />
+            )}
+            {readFilter === "read" && (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                className="h-4 w-4 text-[color:var(--success)]"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             )}
-            {readFilter === 'unread' && <div className="h-3 w-3 rounded-full bg-[color:var(--warning)]" />}
+            {readFilter === "unread" && (
+              <div className="h-3 w-3 rounded-full bg-[color:var(--warning)]" />
+            )}
           </button>
         </div>
       </div>
@@ -198,7 +219,9 @@ export default function Home() {
       {loading && (
         <div className="surface-card py-10 text-center">
           <div className="inline-block h-7 w-7 animate-spin rounded-full border-[3px] border-solid border-[color:var(--accent)] border-r-transparent" />
-          <p className="mt-3 text-sm text-[color:var(--foreground-secondary)]">加载中...</p>
+          <p className="mt-3 text-sm text-[color:var(--foreground-secondary)]">
+            加载中...
+          </p>
         </div>
       )}
 
@@ -210,7 +233,9 @@ export default function Home() {
 
       {!loading && !error && articles.length === 0 && (
         <div className="surface-card py-10 text-center">
-          <p className="text-lg text-[color:var(--foreground-secondary)]">{emptyMessage}</p>
+          <p className="text-lg text-[color:var(--foreground-secondary)]">
+            {emptyMessage}
+          </p>
           <Link href="/add" className="btn-primary mt-4 px-5 text-sm">
             添加文章
           </Link>
@@ -219,11 +244,17 @@ export default function Home() {
 
       <div className="grid grid-cols-1 gap-3">
         {articles.map((article) => (
-          <article key={article.id} className="surface-card p-4 flex items-center gap-4">
-            <Link href={`/article/${article.id}`} className="block flex-1 min-w-0">
+          <article
+            key={article.id}
+            className="surface-card p-4 flex items-center gap-4"
+          >
+            <Link
+              href={`/article/${article.id}`}
+              className="block flex-1 min-w-0"
+            >
               <div className="mb-2 flex items-start justify-between gap-3">
                 <h2 className="line-clamp-2 flex-1 text-base font-semibold text-[color:var(--foreground)]">
-                  {article.title || '无标题'}
+                  {article.title || "无标题"}
                 </h2>
                 {getStatusBadge(article.status)}
               </div>
@@ -235,11 +266,11 @@ export default function Home() {
                 <span
                   className={`rounded-full border px-2 py-1 text-xs font-medium ${
                     article.isRead
-                      ? 'border-[color:color-mix(in_srgb,var(--success)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_14%,var(--background-elevated))] text-[color:var(--success)]'
-                      : 'border-[color:color-mix(in_srgb,var(--warning)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_14%,var(--background-elevated))] text-[color:var(--warning)]'
+                      ? "border-[color:color-mix(in_srgb,var(--success)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_14%,var(--background-elevated))] text-[color:var(--success)]"
+                      : "border-[color:color-mix(in_srgb,var(--warning)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_14%,var(--background-elevated))] text-[color:var(--warning)]"
                   }`}
                 >
-                  {article.isRead ? '已读' : '未读'}
+                  {article.isRead ? "已读" : "未读"}
                 </span>
               </div>
 
@@ -250,7 +281,7 @@ export default function Home() {
               )}
 
               <p className="text-xs text-[color:var(--foreground-tertiary)]">
-                {new Date(article.createdAt).toLocaleString('zh-CN')}
+                {new Date(article.createdAt).toLocaleString("zh-CN")}
               </p>
             </Link>
 
@@ -261,18 +292,28 @@ export default function Home() {
                 toggleReadStatus(article.id, article.isRead);
               }}
               disabled={updatingArticleId === article.id}
-              title={article.isRead ? '标记为未读' : '标记为已读'}
-              className={`shrink-0 flex h-6 w-6 items-center justify-center rounded-full border transition-colors ${
+              title={article.isRead ? "标记为未读" : "标记为已读"}
+              className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
                 updatingArticleId === article.id
-                  ? 'cursor-not-allowed opacity-50 border-[color:var(--border)] bg-[color:var(--background-muted)]'
+                  ? "cursor-not-allowed opacity-50 border-[color:var(--border)] bg-[color:var(--background-muted)]"
                   : article.isRead
-                    ? 'border-[color:var(--success)] bg-[color:var(--success)] text-white'
-                    : 'border-[color:var(--border)] bg-transparent hover:border-[color:var(--accent)]'
+                    ? "border-[color:var(--success)] bg-[color:var(--success)] text-white"
+                    : "border-[color:var(--border)] bg-transparent hover:border-[color:var(--accent)]"
               }`}
             >
               {article.isRead && (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="h-3.5 w-3.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  className="h-3.5 w-3.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               )}
             </button>
