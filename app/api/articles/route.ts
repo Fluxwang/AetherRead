@@ -99,6 +99,8 @@ export async function POST(request: NextRequest) {
         isRead: false,
         readAt: null,
         originalContent: content || "",
+        translationStatus: "not_started",
+        translationError: null,
         status: "pending",
       },
     });

@@ -34,6 +34,9 @@ export default function Home() {
   const [updatingArticleId, setUpdatingArticleId] = useState<string | null>(
     null,
   );
+  const [deletingArticleId, setDeletingArticleId] = useState<string | null>(
+    null,
+  );
 
   const fetchArticles = useCallback(async () => {
     try {
@@ -54,6 +57,28 @@ export default function Home() {
       setLoading(false);
     }
   }, [ownerFilter, readFilter]);
+
+  const deleteArticle = async (articleId: string) => {
+    if (!window.confirm("确定要删除这篇文章吗？")) return;
+
+    try {
+      setDeletingArticleId(articleId);
+      const response = await fetch(`/api/articles/${articleId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "删除文章失败");
+      }
+
+      setArticles((prev) => prev.filter((a) => a.id !== articleId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "删除文章失败");
+    } finally {
+      setDeletingArticleId(null);
+    }
+  };
 
   useEffect(() => {
     fetchArticles();
@@ -285,38 +310,73 @@ export default function Home() {
               </p>
             </Link>
 
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                toggleReadStatus(article.id, article.isRead);
-              }}
-              disabled={updatingArticleId === article.id}
-              title={article.isRead ? "标记为未读" : "标记为已读"}
-              className={`shrink-0 flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
-                updatingArticleId === article.id
-                  ? "cursor-not-allowed opacity-50 border-[color:var(--border)] bg-[color:var(--background-muted)]"
-                  : article.isRead
-                    ? "border-[color:var(--success)] bg-[color:var(--success)] text-white"
-                    : "border-[color:var(--border)] bg-transparent hover:border-[color:var(--accent)]"
-              }`}
-            >
-              {article.isRead && (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="3"
-                  className="h-3.5 w-3.5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-              )}
-            </button>
+            <div className="flex shrink-0 flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleReadStatus(article.id, article.isRead);
+                }}
+                disabled={updatingArticleId === article.id}
+                title={article.isRead ? "标记为未读" : "标记为已读"}
+                className={`flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
+                  updatingArticleId === article.id
+                    ? "cursor-not-allowed border-[color:var(--border)] bg-[color:var(--background-muted)] opacity-50"
+                    : article.isRead
+                      ? "border-[color:var(--success)] bg-[color:var(--success)] text-white"
+                      : "border-[color:var(--border)] bg-transparent hover:border-[color:var(--accent)]"
+                }`}
+              >
+                {article.isRead && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    className="h-3 w-3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteArticle(article.id);
+                }}
+                disabled={deletingArticleId === article.id}
+                title="删除文章"
+                className={`flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
+                  deletingArticleId === article.id
+                    ? "cursor-not-allowed border-[color:var(--border)] bg-[color:var(--background-muted)] opacity-50"
+                    : "border-[color:var(--border)] bg-transparent text-[color:var(--foreground-tertiary)] hover:border-[color:var(--danger)] hover:text-[color:var(--danger)]"
+                }`}
+              >
+                {deletingArticleId === article.id ? (
+                  <div className="h-2 w-2 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
+                ) : (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-3 w-3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
           </article>
         ))}
       </div>

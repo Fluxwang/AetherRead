@@ -13,6 +13,8 @@ export interface Article {
   originalContent: string;
   summary: string | null;
   translatedText: string | null;
+  translationStatus: "not_started" | "processing" | "ready" | "failed";
+  translationError: string | null;
   status: "pending" | "processing" | "ready" | "failed";
   createdAt: Date | string;
   updatedAt: Date | string;

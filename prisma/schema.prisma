@@ -21,11 +21,14 @@ model Article {
   originalContent String
   summary         String?
   translatedText  String?
+  translationStatus String  @default("not_started") // "not_started", "processing", "ready", "failed"
+  translationError  String?
   status          String    @default("pending") // "pending", "processing", "ready", "failed"
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   @@index([status])
+  @@index([translationStatus])
   @@index([createdAt])
   @@index([ownerTag, createdAt])
   @@index([ownerTag, isRead, createdAt])
