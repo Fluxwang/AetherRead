@@ -648,74 +648,73 @@ export default function ArticlePage() {
             >
               {article.isRead ? "已读" : "未读"}
             </span>
+
+            <button
+              type="button"
+              onClick={handleStartTranslation}
+              disabled={
+                translating ||
+                normalizedTranslationStatus === "processing" ||
+                normalizedTranslationStatus === "ready"
+              }
+              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition-all ${
+                normalizedTranslationStatus === "ready"
+                  ? "border-[color:color-mix(in_srgb,var(--success)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_10%,var(--background-elevated))] text-[color:var(--success)]"
+                  : normalizedTranslationStatus === "failed"
+                    ? "border-[color:color-mix(in_srgb,var(--danger)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--danger)_10%,var(--background-elevated))] text-[color:var(--danger)]"
+                    : "border-[color:var(--border)] bg-[color:var(--background-muted)] text-[color:var(--foreground-secondary)] hover:border-[color:var(--border-strong)] hover:bg-[color:color-mix(in_srgb,var(--background-muted)_80%,var(--border))]"
+              } disabled:cursor-default`}
+              title={translationButtonLabel}
+            >
+              {translating || normalizedTranslationStatus === "processing" ? (
+                <>
+                  <div className="h-3 w-3 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
+                  <span>
+                    {translationProgress
+                      ? `${translationProgress.completed}/${translationProgress.total}`
+                      : "翻译中"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="h-3.5 w-3.5"
+                  >
+                    <path d="m5 8 6 6" />
+                    <path d="m4 14 6-6 2-3" />
+                    <path d="M2 5h12" />
+                    <path d="M7 2h1" />
+                    <path d="m22 22-5-10-5 10" />
+                    <path d="M14 18h6" />
+                  </svg>
+                  <span>
+                    {normalizedTranslationStatus === "ready"
+                      ? "已翻译"
+                      : translatedCount > 0
+                        ? "继续翻译"
+                        : "翻译"}
+                  </span>
+                </>
+              )}
+            </button>
           </div>
           {ownerTagError && (
             <p className="mt-2 text-sm text-[color:var(--danger)]">
               {ownerTagError}
             </p>
           )}
-
-          {article.summary && (
-            <div className="mt-5">
-              <ArticleSummary summary={article.summary} />
-            </div>
-          )}
-
-          {summaryFailed && (
-            <div className="mt-5 rounded-xl border border-[color:color-mix(in_srgb,var(--warning)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_12%,var(--background-elevated))] p-4">
-              <p className="text-sm text-[color:var(--warning)]">
-                摘要生成失败，可重试抓取。
+          {(translationError || article.translationError) &&
+            normalizedTranslationStatus !== "ready" && (
+              <p className="mt-2 text-xs text-[color:var(--danger)]">
+                {translationError || article.translationError}
               </p>
-              <button
-                type="button"
-                onClick={handleRetryFetch}
-                disabled={retryingFetch}
-                className="btn-primary mt-3 px-4 text-sm"
-              >
-                {retryingFetch ? "重试中..." : "重新抓取并生成摘要"}
-              </button>
-              {retryError && (
-                <p className="mt-2 text-sm text-[color:var(--danger)]">
-                  {retryError}
-                </p>
-              )}
-            </div>
-          )}
-
-          <div className="mt-5 rounded-xl border border-[color:var(--border)] bg-[color:var(--background-muted)] p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-medium text-[color:var(--foreground)]">
-                  翻译
-                </p>
-                <p className="text-xs text-[color:var(--foreground-secondary)]">
-                  {normalizedTranslationStatus === "ready"
-                    ? `翻译完成，已生成 ${translatedCount} 段`
-                    : translatedCount > 0
-                      ? `已翻译 ${translatedCount} 段，可继续`
-                      : "点击后开始翻译（按段实时显示）"}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleStartTranslation}
-                disabled={
-                  translating ||
-                  normalizedTranslationStatus === "processing" ||
-                  normalizedTranslationStatus === "ready"
-                }
-                className="btn-primary px-4 text-sm"
-              >
-                {translationButtonLabel}
-              </button>
-            </div>
-            {(translationError || article.translationError) &&
-              normalizedTranslationStatus !== "ready" && (
-                <p className="mt-3 text-sm text-[color:var(--danger)]">
-                  {translationError || article.translationError}
-                </p>
-              )}
-          </div>
+            )}
 
           <div className="mt-5 border-t border-[color:var(--border)] pt-5">
             <ReadingModeToggle currentMode={mode} onModeChange={setMode} />
