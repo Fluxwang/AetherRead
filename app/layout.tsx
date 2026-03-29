@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
+
+type ThemeMode = "light" | "dark";
+const THEME_STORAGE_KEY = "aether-theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,14 +28,24 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({
+function parseThemeMode(theme: string | undefined): ThemeMode | undefined {
+  return theme === "light" || theme === "dark" ? theme : undefined;
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const themeFromCookie = parseThemeMode(
+    cookieStore.get(THEME_STORAGE_KEY)?.value,
+  );
+
   return (
     <html
       lang="zh-CN"
+      data-theme={themeFromCookie}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">

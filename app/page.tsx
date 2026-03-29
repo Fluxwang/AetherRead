@@ -1,52 +1,136 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import ThemeToggle from "@/app/components/ThemeToggle";
+import type { Article, OwnerTag, ReadFilter } from "@/types";
+import { OWNER_TAGS } from "@/types";
 
-interface Article {
-  id: string;
-  title: string;
-  status: 'pending' | 'processing' | 'ready' | 'failed';
-  createdAt: string;
-  originalUrl?: string;
-}
+const readFilterLabels: Record<ReadFilter, string> = {
+  all: "全部",
+  unread: "未读",
+  read: "已读",
+};
 
 export default function Home() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [ownerFilter, setOwnerFilter] = useState<OwnerTag>("Wang");
+  const [readFilter, setReadFilter] = useState<ReadFilter>("all");
+  const [updatingArticleId, setUpdatingArticleId] = useState<string | null>(
+    null,
+  );
+  const [deletingArticleId, setDeletingArticleId] = useState<string | null>(
+    null,
+  );
 
-  useEffect(() => {
-    fetchArticles();
-  }, []);
-
-  const fetchArticles = async () => {
+  const fetchArticles = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/articles');
-      if (!response.ok) throw new Error('Failed to fetch articles');
+      setError(null);
+
+      const params = new URLSearchParams();
+      params.set("ownerTag", ownerFilter);
+      params.set("read", readFilter);
+
+      const response = await fetch(`/api/articles?${params.toString()}`);
+      if (!response.ok) throw new Error("Failed to fetch articles");
       const data = await response.json();
       setArticles(data.articles || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load articles');
+      setError(err instanceof Error ? err.message : "Failed to load articles");
     } finally {
       setLoading(false);
     }
+  }, [ownerFilter, readFilter]);
+
+  const deleteArticle = async (articleId: string) => {
+    if (!window.confirm("确定要删除这篇文章吗？")) return;
+
+    try {
+      setDeletingArticleId(articleId);
+      const response = await fetch(`/api/articles/${articleId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "删除文章失败");
+      }
+
+      setArticles((prev) => prev.filter((a) => a.id !== articleId));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "删除文章失败");
+    } finally {
+      setDeletingArticleId(null);
+    }
   };
 
-  const getStatusBadge = (status: Article['status']) => {
+  useEffect(() => {
+    fetchArticles();
+  }, [fetchArticles]);
+
+  const getStatusBadge = (status: Article["status"]) => {
     const styles = {
-      pending: 'status-badge-pending',
-      processing: 'status-badge-processing',
-      ready: 'status-badge-ready',
-      failed: 'status-badge-failed',
+      pending: "status-badge-pending",
+      processing: "status-badge-processing",
+      ready: "status-badge-ready",
+      failed: "status-badge-failed",
     };
-    return (
-      <span className={`status-badge ${styles[status]}`}>
-        {status}
-      </span>
-    );
+    return <span className={`status-badge ${styles[status]}`}>{status}</span>;
   };
+
+  const toggleReadStatus = async (
+    articleId: string,
+    currentStatus: boolean,
+  ) => {
+    try {
+      setUpdatingArticleId(articleId);
+      const response = await fetch(`/api/articles/${articleId}/read`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isRead: !currentStatus }),
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "更新已读状态失败");
+      }
+
+      const data = await response.json();
+      const updated = data.article as {
+        id: string;
+        isRead: boolean;
+        readAt: string | null;
+      };
+
+      setArticles((prev) =>
+        prev.map((article) =>
+          article.id === updated.id
+            ? { ...article, isRead: updated.isRead, readAt: updated.readAt }
+            : article,
+        ),
+      );
+
+      if (readFilter !== "all") {
+        setArticles((prev) =>
+          prev.filter((article) =>
+            readFilter === "read" ? article.isRead : !article.isRead,
+          ),
+        );
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "更新已读状态失败");
+    } finally {
+      setUpdatingArticleId(null);
+    }
+  };
+
+  const emptyMessage = useMemo(() => {
+    if (readFilter === "read") return `${ownerFilter} 还没有已读文章`;
+    if (readFilter === "unread") return `${ownerFilter} 还没有未读文章`;
+    return `${ownerFilter} 还没有文章`;
+  }, [ownerFilter, readFilter]);
 
   return (
     <div className="space-y-5 pb-2">
@@ -60,19 +144,96 @@ export default function Home() {
               我的文章
             </h1>
             <p className="mt-1 text-sm text-[color:var(--foreground-secondary)]">
-              移动阅读、翻译与摘要，一页完成。
+              按用户与阅读状态管理文章。
             </p>
           </div>
-          <Link href="/add" className="btn-primary shrink-0 px-4 text-sm">
-            添加
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <ThemeToggle />
+            <Link href="/add" className="btn-primary min-h-9 px-4 text-sm">
+              添加
+            </Link>
+          </div>
         </div>
       </header>
+
+      <div className="surface-card p-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-[color:var(--foreground-tertiary)]">
+            用户
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {OWNER_TAGS.map((owner) => {
+              const active = owner === ownerFilter;
+              return (
+                <button
+                  key={owner}
+                  type="button"
+                  onClick={() => setOwnerFilter(owner)}
+                  className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    active
+                      ? "border-[color:var(--accent)] bg-[color:color-mix(in_srgb,var(--accent)_14%,var(--background-elevated))] text-[color:var(--accent)]"
+                      : "border-[color:var(--border)] bg-[color:var(--background-elevated)] text-[color:var(--foreground-secondary)]"
+                  }`}
+                >
+                  {owner}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex flex-col items-center shrink-0">
+          <p className="mb-2 text-xs font-medium uppercase tracking-[0.1em] text-[color:var(--foreground-tertiary)]">
+            状态
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              const filters: ReadFilter[] = ["all", "unread", "read"];
+              const currentIndex = filters.indexOf(readFilter);
+              const nextIndex = (currentIndex + 1) % filters.length;
+              setReadFilter(filters[nextIndex]);
+            }}
+            title={`当前状态: ${readFilterLabels[readFilter]} (点击切换)`}
+            className={`flex h-6 w-6 items-center justify-center rounded-full border transition-colors ${
+              readFilter === "all"
+                ? "border-[color:var(--border)] bg-[color:var(--background-muted)]"
+                : readFilter === "read"
+                  ? "border-[color:color-mix(in_srgb,var(--success)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_14%,var(--background-elevated))]"
+                  : "border-[color:color-mix(in_srgb,var(--warning)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_14%,var(--background-elevated))]"
+            }`}
+          >
+            {readFilter === "all" && (
+              <div className="h-3 w-3 rounded-full bg-[color:var(--foreground-tertiary)]" />
+            )}
+            {readFilter === "read" && (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                className="h-4 w-4 text-[color:var(--success)]"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            )}
+            {readFilter === "unread" && (
+              <div className="h-3 w-3 rounded-full bg-[color:var(--warning)]" />
+            )}
+          </button>
+        </div>
+      </div>
 
       {loading && (
         <div className="surface-card py-10 text-center">
           <div className="inline-block h-7 w-7 animate-spin rounded-full border-[3px] border-solid border-[color:var(--accent)] border-r-transparent" />
-          <p className="mt-3 text-sm text-[color:var(--foreground-secondary)]">加载中...</p>
+          <p className="mt-3 text-sm text-[color:var(--foreground-secondary)]">
+            加载中...
+          </p>
         </div>
       )}
 
@@ -84,35 +245,126 @@ export default function Home() {
 
       {!loading && !error && articles.length === 0 && (
         <div className="surface-card py-10 text-center">
-          <p className="text-lg text-[color:var(--foreground-secondary)]">还没有文章</p>
+          <p className="text-lg text-[color:var(--foreground-secondary)]">
+            {emptyMessage}
+          </p>
           <Link href="/add" className="btn-primary mt-4 px-5 text-sm">
-            添加第一篇文章
+            添加文章
           </Link>
         </div>
       )}
 
       <div className="grid grid-cols-1 gap-3">
         {articles.map((article) => (
-          <Link
+          <article
             key={article.id}
-            href={`/article/${article.id}`}
-            className="surface-card block p-4 transition-transform duration-200 hover:-translate-y-0.5"
+            className="surface-card p-4 flex items-center gap-4"
           >
-            <div className="mb-2 flex items-start justify-between gap-3">
-              <h2 className="line-clamp-2 flex-1 text-base font-semibold text-[color:var(--foreground)]">
-                {article.title || '无标题'}
-              </h2>
-              {getStatusBadge(article.status)}
-            </div>
-            {article.originalUrl && (
-              <p className="mb-2 truncate text-xs text-[color:var(--foreground-secondary)]">
-                {article.originalUrl}
+            <Link
+              href={`/article/${article.id}`}
+              className="block flex-1 min-w-0"
+            >
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <h2 className="line-clamp-2 flex-1 text-base font-semibold text-[color:var(--foreground)]">
+                  {article.title || "无标题"}
+                </h2>
+                {getStatusBadge(article.status)}
+              </div>
+
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--background-muted)] px-2 py-1 text-xs font-medium text-[color:var(--foreground-secondary)]">
+                  {article.ownerTag}
+                </span>
+                <span
+                  className={`rounded-full border px-2 py-1 text-xs font-medium ${
+                    article.isRead
+                      ? "border-[color:color-mix(in_srgb,var(--success)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_14%,var(--background-elevated))] text-[color:var(--success)]"
+                      : "border-[color:color-mix(in_srgb,var(--warning)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_14%,var(--background-elevated))] text-[color:var(--warning)]"
+                  }`}
+                >
+                  {article.isRead ? "已读" : "未读"}
+                </span>
+              </div>
+
+              {article.originalUrl && (
+                <p className="mb-2 truncate text-xs text-[color:var(--foreground-secondary)]">
+                  {article.originalUrl}
+                </p>
+              )}
+
+              <p className="text-xs text-[color:var(--foreground-tertiary)]">
+                {new Date(article.createdAt).toLocaleString("zh-CN")}
               </p>
-            )}
-            <p className="text-xs text-[color:var(--foreground-tertiary)]">
-              {new Date(article.createdAt).toLocaleString('zh-CN')}
-            </p>
-          </Link>
+            </Link>
+
+            <div className="flex shrink-0 flex-col items-center gap-3">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  toggleReadStatus(article.id, article.isRead);
+                }}
+                disabled={updatingArticleId === article.id}
+                title={article.isRead ? "标记为未读" : "标记为已读"}
+                className={`flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
+                  updatingArticleId === article.id
+                    ? "cursor-not-allowed border-[color:var(--border)] bg-[color:var(--background-muted)] opacity-50"
+                    : article.isRead
+                      ? "border-[color:var(--success)] bg-[color:var(--success)] text-white"
+                      : "border-[color:var(--border)] bg-transparent hover:border-[color:var(--accent)]"
+                }`}
+              >
+                {article.isRead && (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="3"
+                    className="h-3 w-3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  deleteArticle(article.id);
+                }}
+                disabled={deletingArticleId === article.id}
+                title="删除文章"
+                className={`flex h-5 w-5 items-center justify-center rounded-full border transition-colors ${
+                  deletingArticleId === article.id
+                    ? "cursor-not-allowed border-[color:var(--border)] bg-[color:var(--background-muted)] opacity-50"
+                    : "border-[color:var(--border)] bg-transparent text-[color:var(--foreground-tertiary)] hover:border-[color:var(--danger)] hover:text-[color:var(--danger)]"
+                }`}
+              >
+                {deletingArticleId === article.id ? (
+                  <div className="h-2 w-2 animate-spin rounded-full border-2 border-solid border-current border-r-transparent" />
+                ) : (
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    className="h-3 w-3"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </article>
         ))}
       </div>
     </div>

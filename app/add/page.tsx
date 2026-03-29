@@ -3,16 +3,24 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ThemeToggle from '@/app/components/ThemeToggle';
+import type { OwnerTag, InputMode } from '@/types';
+import { OWNER_TAGS } from '@/types';
 
-type InputMode = 'crawler' | 'paste' | 'rss';
+interface ArticlePayload {
+  sourceType: 'manual' | 'crawler' | 'rss';
+  ownerTag: OwnerTag;
+  content?: string;
+  url?: string;
+}
 
 export default function AddArticle() {
   const router = useRouter();
   const [inputMode, setInputMode] = useState<InputMode>('crawler');
+  const [ownerTag, setOwnerTag] = useState<OwnerTag>('Wang');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [polling, setPolling] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,8 +28,9 @@ export default function AddArticle() {
     setLoading(true);
 
     try {
-      const payload: Record<string, string> = {
+      const payload: ArticlePayload = {
         sourceType: inputMode === 'paste' ? 'manual' : inputMode,
+        ownerTag,
       };
 
       if (inputMode === 'paste') {
@@ -43,73 +52,61 @@ export default function AddArticle() {
 
       const data = await response.json();
       const articleId = data.article.id;
-      
-      setPolling(true);
-      
-      // 触发后台处理，不等待完成
-      fetch(`/api/articles/process/${articleId}`, { method: 'POST' }).catch(console.error);
-      
-      await pollArticleStatus(articleId);
+
+      // 触发后台抓取与摘要，不等待完成
+      fetch(`/api/articles/fetch/${articleId}`, { method: 'POST' }).catch((fetchError) => {
+        console.error('Error fetching article in background:', fetchError);
+      });
+
+      router.push('/');
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add article');
       setLoading(false);
     }
   };
 
-  const pollArticleStatus = async (articleId: string) => {
-    const maxAttempts = 60;
-    let attempts = 0;
-
-    const poll = async () => {
-      try {
-        const response = await fetch(`/api/articles/${articleId}`);
-        if (!response.ok) throw new Error('Failed to fetch article status');
-        
-        const data = await response.json();
-        const article = data.article;
-        
-        if (article.status === 'ready') {
-          router.push(`/article/${articleId}`);
-          return;
-        }
-        
-        if (article.status === 'failed') {
-          setError('文章处理失败，请重试');
-          setLoading(false);
-          setPolling(false);
-          return;
-        }
-        
-        attempts++;
-        if (attempts < maxAttempts) {
-          setTimeout(poll, 2000);
-        } else {
-          setError('处理超时，请稍后查看');
-          setLoading(false);
-          setPolling(false);
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to check status');
-        setLoading(false);
-        setPolling(false);
-      }
-    };
-
-    poll();
-  };
-
   return (
     <div className="space-y-4">
-      <div>
+      <div className="flex items-center justify-between gap-3">
         <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
           ← 返回首页
         </Link>
+        <ThemeToggle />
+      </div>
+      <div>
         <h1 className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">
           添加文章
         </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="surface-card p-4">
+        <div className="mb-5">
+          <label className="mb-3 block text-sm font-medium text-[color:var(--foreground)]">
+            归属用户
+          </label>
+          <div className="space-y-2">
+            {OWNER_TAGS.map((owner) => (
+              <label key={owner} className="surface-muted flex cursor-pointer items-center p-3 transition-colors">
+                <input
+                  type="radio"
+                  name="owner"
+                  value={owner}
+                  checked={ownerTag === owner}
+                  onChange={(e) => setOwnerTag(e.target.value as OwnerTag)}
+                  className="h-4 w-4 accent-[color:var(--accent)]"
+                  disabled={loading}
+                />
+                <div className="ml-3">
+                  <div className="text-sm font-medium text-[color:var(--foreground)]">
+                    {owner}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
         <div className="mb-5">
           <label className="mb-3 block text-sm font-medium text-[color:var(--foreground)]">
               选择模式
@@ -208,15 +205,6 @@ export default function AddArticle() {
         {error && (
           <div className="mb-5 rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--danger)_10%,var(--background-elevated))] p-3">
             <p className="text-sm text-[color:var(--danger)]">{error}</p>
-          </div>
-        )}
-
-        {polling && (
-          <div className="mb-5 rounded-xl border border-[color:color-mix(in_srgb,var(--accent)_40%,var(--border))] bg-[color:color-mix(in_srgb,var(--accent)_10%,var(--background-elevated))] p-3">
-            <div className="flex items-center">
-              <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-solid border-[color:var(--accent)] border-r-transparent" />
-              <p className="text-sm text-[color:var(--accent)]">正在处理文章，请稍候...</p>
-            </div>
           </div>
         )}
 
