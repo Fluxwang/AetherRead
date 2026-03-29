@@ -10,14 +10,14 @@ export default function ArticleSummary({ summary }: ArticleSummaryProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-[color:color-mix(in_srgb,var(--accent)_35%,var(--border))] bg-[color:color-mix(in_srgb,var(--accent)_10%,var(--background-elevated))]">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+        className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-[color:color-mix(in_srgb,var(--accent)_14%,var(--background-elevated))]"
       >
         <div className="flex items-center gap-2">
           <svg
-            className="w-5 h-5 text-blue-600 dark:text-blue-400"
+            className="h-5 w-5 text-[color:var(--accent)]"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -29,12 +29,10 @@ export default function ArticleSummary({ summary }: ArticleSummaryProps) {
               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <span className="font-medium text-blue-900 dark:text-blue-100">
-            AI 摘要
-          </span>
+          <span className="font-medium text-[color:var(--accent)]">AI 摘要</span>
         </div>
         <svg
-          className={`w-5 h-5 text-blue-600 dark:text-blue-400 transition-transform ${
+          className={`h-5 w-5 text-[color:var(--accent)] transition-transform ${
             isExpanded ? "rotate-180" : ""
           }`}
           fill="none"
@@ -51,8 +49,8 @@ export default function ArticleSummary({ summary }: ArticleSummaryProps) {
       </button>
 
       {isExpanded && (
-        <div className="px-4 py-3 border-t border-blue-200 dark:border-blue-800">
-          <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap">
+        <div className="border-t border-[color:color-mix(in_srgb,var(--accent)_30%,var(--border))] px-4 py-3">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-[color:var(--foreground-secondary)]">
             {summary}
           </p>
         </div>

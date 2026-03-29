@@ -115,10 +115,10 @@ export default function ArticlePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
+      <div className="surface-card flex min-h-[40vh] items-center justify-center">
         <div className="text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="mt-4 text-zinc-600 dark:text-zinc-400">加载中...</p>
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[color:var(--accent)] border-r-transparent" />
+          <p className="mt-3 text-sm text-[color:var(--foreground-secondary)]">加载中...</p>
         </div>
       </div>
     );
@@ -126,17 +126,12 @@ export default function ArticlePage() {
 
   if (error || !article) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-        <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline mb-4"
-          >
-            ← 返回首页
-          </Link>
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
-            <p className="text-red-600 dark:text-red-400">{error || '文章不存在'}</p>
-          </div>
+      <div className="space-y-4">
+        <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
+          ← 返回首页
+        </Link>
+        <div className="surface-card border-[color:color-mix(in_srgb,var(--danger)_40%,var(--border))] bg-[color:color-mix(in_srgb,var(--danger)_10%,var(--background-elevated))] p-4">
+          <p className="text-sm text-[color:var(--danger)]">{error || '文章不存在'}</p>
         </div>
       </div>
     );
@@ -144,36 +139,32 @@ export default function ArticlePage() {
 
   if (article.status !== 'ready') {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-        <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-          <Link
-            href="/"
-            className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline mb-4"
-          >
-            ← 返回首页
-          </Link>
-          <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm p-6">
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
-              {article.title || '处理中...'}
-            </h1>
-            <div className="flex items-center">
+      <div className="space-y-4">
+        <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
+          ← 返回首页
+        </Link>
+        <div className="surface-card p-5">
+          <h1 className="mb-4 text-xl font-semibold text-[color:var(--foreground)]">
+            {article.title || '处理中...'}
+          </h1>
+          <div className="flex items-center">
               {article.status === 'processing' && (
                 <>
-                  <div className="h-5 w-5 animate-spin rounded-full border-3 border-solid border-blue-600 border-r-transparent mr-3"></div>
-                  <p className="text-blue-600 dark:text-blue-400">正在处理文章...</p>
+                  <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-solid border-[color:var(--accent)] border-r-transparent" />
+                  <p className="text-sm text-[color:var(--accent)]">正在处理文章...</p>
                 </>
               )}
               {article.status === 'pending' && (
-                <p className="text-zinc-600 dark:text-zinc-400">文章等待处理</p>
+                <p className="text-sm text-[color:var(--foreground-secondary)]">文章等待处理</p>
               )}
               {article.status === 'failed' && (
                 <div className="w-full">
-                  <p className="text-red-600 dark:text-red-400 mb-4">文章处理失败</p>
+                  <p className="mb-3 text-sm text-[color:var(--danger)]">文章处理失败</p>
                   <button
                     type="button"
                     onClick={handleRetry}
                     disabled={retrying}
-                    className="h-10 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors"
+                    className="btn-primary px-4 text-sm"
                   >
                     {retrying ? '重试中...' : '重新生成 AI 摘要与翻译'}
                   </button>
@@ -181,9 +172,8 @@ export default function ArticlePage() {
               )}
             </div>
             {retryError && (
-              <p className="mt-4 text-sm text-red-600 dark:text-red-400">{retryError}</p>
+              <p className="mt-3 text-sm text-[color:var(--danger)]">{retryError}</p>
             )}
-          </div>
         </div>
       </div>
     );
@@ -194,63 +184,56 @@ export default function ArticlePage() {
   const shouldShowRetry = summaryFailed || translationFailed;
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <Link
-          href="/"
-          className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline mb-6"
-        >
-          ← 返回首页
-        </Link>
+    <div className="space-y-4">
+      <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
+        ← 返回首页
+      </Link>
 
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-6">
-            <ArticleHeader
-              title={article.title}
-              originalUrl={article.originalUrl}
-              createdAt={article.createdAt}
-            />
+      <div className="surface-card overflow-hidden">
+        <div className="p-4">
+          <ArticleHeader
+            title={article.title}
+            originalUrl={article.originalUrl}
+            createdAt={article.createdAt}
+          />
 
-            {article.summary && (
-              <div className="mt-6">
-                <ArticleSummary summary={article.summary} />
-              </div>
-            )}
-
-            {shouldShowRetry && (
-              <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-                <p className="text-sm text-amber-700 dark:text-amber-300">
-                  AI 处理失败，可重试。
-                </p>
-                <button
-                  type="button"
-                  onClick={handleRetry}
-                  disabled={retrying}
-                  className="mt-3 h-10 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors"
-                >
-                  {retrying ? '重试中...' : '重新生成 AI 摘要与翻译'}
-                </button>
-                {retryError && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{retryError}</p>
-                )}
-              </div>
-            )}
-
-            <div className="mt-6 border-t border-zinc-200 dark:border-zinc-700 pt-6">
-              <ReadingModeToggle
-                currentMode={mode}
-                onModeChange={setMode}
-              />
+          {article.summary && (
+            <div className="mt-5">
+              <ArticleSummary summary={article.summary} />
             </div>
-          </div>
+          )}
 
-          <div className="border-t border-zinc-200 dark:border-zinc-700">
-            <ArticleContent
-              originalContent={article.originalContent || ''}
-              translatedText={article.translatedText || ''}
-              mode={mode}
+          {shouldShowRetry && (
+            <div className="mt-5 rounded-xl border border-[color:color-mix(in_srgb,var(--warning)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_12%,var(--background-elevated))] p-4">
+              <p className="text-sm text-[color:var(--warning)]">AI 处理失败，可重试。</p>
+              <button
+                type="button"
+                onClick={handleRetry}
+                disabled={retrying}
+                className="btn-primary mt-3 px-4 text-sm"
+              >
+                {retrying ? '重试中...' : '重新生成 AI 摘要与翻译'}
+              </button>
+              {retryError && (
+                <p className="mt-2 text-sm text-[color:var(--danger)]">{retryError}</p>
+              )}
+            </div>
+          )}
+
+          <div className="mt-5 border-t border-[color:var(--border)] pt-5">
+            <ReadingModeToggle
+              currentMode={mode}
+              onModeChange={setMode}
             />
           </div>
+        </div>
+
+        <div className="border-t border-[color:var(--border)]">
+          <ArticleContent
+            originalContent={article.originalContent || ''}
+            translatedText={article.translatedText || ''}
+            mode={mode}
+          />
         </div>
       </div>
     </div>

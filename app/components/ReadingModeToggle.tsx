@@ -16,18 +16,18 @@ export default function ReadingModeToggle({ currentMode, onModeChange }: Reading
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
+      <label className="text-sm font-medium text-[color:var(--foreground)]">
         阅读模式
       </label>
-      <div className="flex gap-2">
+      <div className="grid grid-cols-3 gap-2">
         {modes.map((mode) => (
           <button
             key={mode.value}
             onClick={() => onModeChange(mode.value)}
-            className={`flex-1 min-h-[44px] px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`min-h-[44px] rounded-xl px-3 py-2 text-sm font-medium transition-colors ${
               currentMode === mode.value
-                ? 'bg-blue-600 text-white'
-                : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-200 dark:hover:bg-zinc-600'
+                ? 'bg-[color:var(--accent)] text-[color:var(--accent-foreground)]'
+                : 'surface-muted text-[color:var(--foreground-secondary)] hover:bg-[color:var(--background-muted)]'
             }`}
           >
             {mode.label}
