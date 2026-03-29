@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Aether Read - 移动端阅读Web应用
 
-## Getting Started
+一个专为移动端设计的英文文章阅读应用，支持文章爬取、AI总结和多模式翻译阅读。
 
-First, run the development server:
+## ✨ 功能特性
 
+### 📝 文章添加
+- 🔗 粘贴网页链接（自动爬取内容）
+- 🐦 粘贴Twitter链接  
+- 📋 直接粘贴文章内容
+- 📡 RSS订阅链接解析
+
+### 🤖 AI智能处理
+- **自动总结**：使用OpenAI GPT生成中文摘要
+- **智能翻译**：段落级英译中翻译
+
+### 📖 三种阅读模式
+1. **全英文模式**：显示原文
+2. **双语模式**：英文段落后紧跟中文翻译
+3. **全中文模式**：仅显示翻译内容
+
+## 🚀 快速开始
+
+### 1. 安装依赖
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. 配置环境变量
+复制 `.env.example` 为 `.env` 并填入你的OpenAI API密钥（可选配置 `OPENAI_BASE_URL`）
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. 初始化数据库
+```bash
+npx prisma migrate dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. 启动开发服务器
+```bash
+npm run dev
+```
 
-## Learn More
+访问 http://localhost:3000 即可使用。
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠 技术栈
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Next.js 16 (App Router)
+- TypeScript
+- Prisma + SQLite
+- OpenAI API
+- Jina Reader API
+- Tailwind CSS 4
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**享受阅读！** 📚✨
