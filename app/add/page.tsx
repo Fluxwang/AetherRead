@@ -3,12 +3,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import ThemeToggle from '@/app/components/ThemeToggle';
 
 type InputMode = 'crawler' | 'paste' | 'rss';
+const OWNER_TAGS = ['Wang', 'LYY'] as const;
+type OwnerTag = (typeof OWNER_TAGS)[number];
 
 export default function AddArticle() {
   const router = useRouter();
   const [inputMode, setInputMode] = useState<InputMode>('crawler');
+  const [ownerTag, setOwnerTag] = useState<OwnerTag>('Wang');
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,6 +26,7 @@ export default function AddArticle() {
     try {
       const payload: Record<string, string> = {
         sourceType: inputMode === 'paste' ? 'manual' : inputMode,
+        ownerTag,
       };
 
       if (inputMode === 'paste') {
@@ -100,16 +105,45 @@ export default function AddArticle() {
 
   return (
     <div className="space-y-4">
-      <div>
+      <div className="flex items-center justify-between gap-3">
         <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
           ← 返回首页
         </Link>
+        <ThemeToggle />
+      </div>
+      <div>
         <h1 className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">
           添加文章
         </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="surface-card p-4">
+        <div className="mb-5">
+          <label className="mb-3 block text-sm font-medium text-[color:var(--foreground)]">
+            归属用户
+          </label>
+          <div className="space-y-2">
+            {OWNER_TAGS.map((owner) => (
+              <label key={owner} className="surface-muted flex cursor-pointer items-center p-3 transition-colors">
+                <input
+                  type="radio"
+                  name="owner"
+                  value={owner}
+                  checked={ownerTag === owner}
+                  onChange={(e) => setOwnerTag(e.target.value as OwnerTag)}
+                  className="h-4 w-4 accent-[color:var(--accent)]"
+                  disabled={loading}
+                />
+                <div className="ml-3">
+                  <div className="text-sm font-medium text-[color:var(--foreground)]">
+                    {owner}
+                  </div>
+                </div>
+              </label>
+            ))}
+          </div>
+        </div>
+
         <div className="mb-5">
           <label className="mb-3 block text-sm font-medium text-[color:var(--foreground)]">
               选择模式

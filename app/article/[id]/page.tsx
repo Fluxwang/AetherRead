@@ -7,12 +7,18 @@ import ArticleHeader from '@/app/components/ArticleHeader';
 import ArticleSummary from '@/app/components/ArticleSummary';
 import ReadingModeToggle from '@/app/components/ReadingModeToggle';
 import ArticleContent from '@/app/components/ArticleContent';
+import ThemeToggle from '@/app/components/ThemeToggle';
+
+type OwnerTag = 'Wang' | 'LYY';
 
 interface Article {
   id: string;
   title: string;
   status: 'pending' | 'processing' | 'ready' | 'failed';
   originalUrl?: string;
+  ownerTag: OwnerTag;
+  isRead: boolean;
+  readAt?: string | null;
   originalContent?: string;
   translatedText?: string;
   summary?: string;
@@ -32,6 +38,7 @@ export default function ArticlePage() {
   const [mode, setMode] = useState<ReadingMode>('bilingual');
   const [retrying, setRetrying] = useState(false);
   const [retryError, setRetryError] = useState<string | null>(null);
+  const [updatingReadState, setUpdatingReadState] = useState(false);
 
   const fetchArticle = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     try {
@@ -66,6 +73,42 @@ export default function ArticlePage() {
 
     return () => clearInterval(timer);
   }, [article, fetchArticle]);
+
+  useEffect(() => {
+    if (!article || article.status !== 'ready' || article.isRead) {
+      return;
+    }
+
+    let cancelled = false;
+    const markAsRead = async () => {
+      try {
+        const response = await fetch(`/api/articles/${article.id}/read`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isRead: true }),
+        });
+        if (!response.ok || cancelled) return;
+
+        const data = await response.json();
+        setArticle((prev) =>
+          prev
+            ? {
+                ...prev,
+                isRead: data.article?.isRead ?? true,
+                readAt: data.article?.readAt ?? new Date().toISOString(),
+              }
+            : prev
+        );
+      } catch (error) {
+        console.error('Error auto marking article as read:', error);
+      }
+    };
+
+    void markAsRead();
+    return () => {
+      cancelled = true;
+    };
+  }, [article]);
 
   const isSummaryFailed = (summary?: string) => {
     const value = summary?.trim() || '';
@@ -113,6 +156,40 @@ export default function ArticlePage() {
     }
   };
 
+  const handleToggleRead = async () => {
+    if (!article) return;
+
+    try {
+      setUpdatingReadState(true);
+      const nextReadState = !article.isRead;
+      const response = await fetch(`/api/articles/${article.id}/read`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isRead: nextReadState }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || '更新已读状态失败');
+      }
+
+      const data = await response.json();
+      setArticle((prev) =>
+        prev
+          ? {
+              ...prev,
+              isRead: data.article?.isRead ?? nextReadState,
+              readAt: data.article?.readAt ?? (nextReadState ? new Date().toISOString() : null),
+            }
+          : prev
+      );
+    } catch (err) {
+      setRetryError(err instanceof Error ? err.message : '更新已读状态失败');
+    } finally {
+      setUpdatingReadState(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="surface-card flex min-h-[40vh] items-center justify-center">
@@ -127,9 +204,12 @@ export default function ArticlePage() {
   if (error || !article) {
     return (
       <div className="space-y-4">
-        <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
-          ← 返回首页
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
+            ← 返回首页
+          </Link>
+          <ThemeToggle />
+        </div>
         <div className="surface-card border-[color:color-mix(in_srgb,var(--danger)_40%,var(--border))] bg-[color:color-mix(in_srgb,var(--danger)_10%,var(--background-elevated))] p-4">
           <p className="text-sm text-[color:var(--danger)]">{error || '文章不存在'}</p>
         </div>
@@ -140,9 +220,12 @@ export default function ArticlePage() {
   if (article.status !== 'ready') {
     return (
       <div className="space-y-4">
-        <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
-          ← 返回首页
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
+            ← 返回首页
+          </Link>
+          <ThemeToggle />
+        </div>
         <div className="surface-card p-5">
           <h1 className="mb-4 text-xl font-semibold text-[color:var(--foreground)]">
             {article.title || '处理中...'}
@@ -185,9 +268,12 @@ export default function ArticlePage() {
 
   return (
     <div className="space-y-4">
-      <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
-        ← 返回首页
-      </Link>
+      <div className="flex items-center justify-between gap-3">
+        <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
+          ← 返回首页
+        </Link>
+        <ThemeToggle />
+      </div>
 
       <div className="surface-card overflow-hidden">
         <div className="p-4">
@@ -196,6 +282,29 @@ export default function ArticlePage() {
             originalUrl={article.originalUrl}
             createdAt={article.createdAt}
           />
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-[color:var(--border)] bg-[color:var(--background-muted)] px-2 py-1 text-xs font-medium text-[color:var(--foreground-secondary)]">
+              {article.ownerTag}
+            </span>
+            <span
+              className={`rounded-full border px-2 py-1 text-xs font-medium ${
+                article.isRead
+                  ? 'border-[color:color-mix(in_srgb,var(--success)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--success)_14%,var(--background-elevated))] text-[color:var(--success)]'
+                  : 'border-[color:color-mix(in_srgb,var(--warning)_55%,var(--border))] bg-[color:color-mix(in_srgb,var(--warning)_14%,var(--background-elevated))] text-[color:var(--warning)]'
+              }`}
+            >
+              {article.isRead ? '已读' : '未读'}
+            </span>
+            <button
+              type="button"
+              onClick={handleToggleRead}
+              disabled={updatingReadState}
+              className="btn-secondary min-h-8 px-3 text-xs"
+            >
+              {updatingReadState ? '更新中...' : article.isRead ? '标记未读' : '标记已读'}
+            </button>
+          </div>
 
           {article.summary && (
             <div className="mt-5">

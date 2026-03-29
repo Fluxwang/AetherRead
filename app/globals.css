@@ -23,8 +23,24 @@
   --font-mono: var(--font-geist-mono);
 }
 
+:root[data-theme="dark"] {
+  --background: #171311;
+  --background-elevated: #201b17;
+  --background-muted: #29231d;
+  --foreground: #f7f1eb;
+  --foreground-secondary: #c8bcb0;
+  --foreground-tertiary: #9f9389;
+  --border: #3a3129;
+  --border-strong: #4a3d32;
+  --accent: #ff7a2f;
+  --accent-foreground: #171311;
+  --danger: #f87171;
+  --success: #4ade80;
+  --warning: #f59e0b;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme]) {
     --background: #171311;
     --background-elevated: #201b17;
     --background-muted: #29231d;

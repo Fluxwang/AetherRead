@@ -24,6 +24,17 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+const themeInitScript = `
+  (function () {
+    try {
+      var theme = localStorage.getItem('aether-theme');
+      if (theme === 'light' || theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', theme);
+      }
+    } catch (e) {}
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -34,6 +45,9 @@ export default function RootLayout({
       lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full">
         <div className="mobile-shell">{children}</div>
       </body>

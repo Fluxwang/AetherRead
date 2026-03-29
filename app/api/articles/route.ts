@@ -1,10 +1,48 @@
 // GET /api/articles - 获取所有文章列表
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+const OWNER_TAGS = ["Wang", "LYY"] as const;
+type OwnerTag = (typeof OWNER_TAGS)[number];
+type ReadFilter = "all" | "read" | "unread";
+
+function isOwnerTag(value: string | null): value is OwnerTag {
+  return !!value && OWNER_TAGS.includes(value as OwnerTag);
+}
+
+function toReadFilter(value: string | null): ReadFilter {
+  if (value === "read" || value === "unread") {
+    return value;
+  }
+  return "all";
+}
+
+export async function GET(request: NextRequest) {
   try {
+    const ownerTagParam = request.nextUrl.searchParams.get("ownerTag");
+    const readFilter = toReadFilter(request.nextUrl.searchParams.get("read"));
+
+    if (ownerTagParam && !isOwnerTag(ownerTagParam)) {
+      return NextResponse.json(
+        { error: "无效的用户标签，仅支持 Wang 或 LYY" },
+        { status: 400 }
+      );
+    }
+
+    const where: Prisma.ArticleWhereInput = {};
+    if (ownerTagParam) {
+      where.ownerTag = ownerTagParam;
+    }
+    if (readFilter === "read") {
+      where.isRead = true;
+    }
+    if (readFilter === "unread") {
+      where.isRead = false;
+    }
+
     const articles = await prisma.article.findMany({
+      where,
       orderBy: {
         createdAt: "desc",
       },
@@ -13,6 +51,9 @@ export async function GET() {
         title: true,
         originalUrl: true,
         sourceType: true,
+        ownerTag: true,
+        isRead: true,
+        readAt: true,
         status: true,
         createdAt: true,
         updatedAt: true,
@@ -33,11 +74,17 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { url, content, sourceType } = body;
+    const { url, content, sourceType, ownerTag } = body;
 
     if (!url && !content) {
       return NextResponse.json(
         { error: "必须提供 URL 或文章内容" },
+        { status: 400 }
+      );
+    }
+    if (!isOwnerTag(ownerTag)) {
+      return NextResponse.json(
+        { error: "必须选择用户标签（Wang 或 LYY）" },
         { status: 400 }
       );
     }
@@ -48,6 +95,9 @@ export async function POST(request: NextRequest) {
         title: "处理中...",
         originalUrl: url || null,
         sourceType: sourceType || "manual",
+        ownerTag,
+        isRead: false,
+        readAt: null,
         originalContent: content || "",
         status: "pending",
       },
