@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
 interface ArticleSummaryProps {
   summary: string;
@@ -35,7 +35,7 @@ export default function ArticleSummary({ summary }: ArticleSummaryProps) {
         </div>
         <svg
           className={`w-5 h-5 text-blue-600 dark:text-blue-400 transition-transform ${
-            isExpanded ? 'rotate-180' : ''
+            isExpanded ? "rotate-180" : ""
           }`}
           fill="none"
           stroke="currentColor"

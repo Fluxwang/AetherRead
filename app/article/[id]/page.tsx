@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import ArticleHeader from '@/app/components/ArticleHeader';
@@ -20,6 +20,7 @@ interface Article {
 }
 
 type ReadingMode = 'english' | 'bilingual' | 'chinese';
+const SUMMARY_FAILURE_MARKERS = ['无法生成摘要', '处理失败', '爬取失败'];
 
 export default function ArticlePage() {
   const params = useParams();
@@ -29,14 +30,14 @@ export default function ArticlePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<ReadingMode>('bilingual');
+  const [retrying, setRetrying] = useState(false);
+  const [retryError, setRetryError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchArticle();
-  }, [articleId]);
-
-  const fetchArticle = async () => {
+  const fetchArticle = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     try {
-      setLoading(true);
+      if (!silent) {
+        setLoading(true);
+      }
       const response = await fetch(`/api/articles/${articleId}`);
       if (!response.ok) throw new Error('Failed to fetch article');
       const data = await response.json();
@@ -44,7 +45,71 @@ export default function ArticlePage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load article');
     } finally {
-      setLoading(false);
+      if (!silent) {
+        setLoading(false);
+      }
+    }
+  }, [articleId]);
+
+  useEffect(() => {
+    fetchArticle();
+  }, [fetchArticle]);
+
+  useEffect(() => {
+    if (!article || (article.status !== 'processing' && article.status !== 'pending')) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      fetchArticle({ silent: true });
+    }, 2000);
+
+    return () => clearInterval(timer);
+  }, [article, fetchArticle]);
+
+  const isSummaryFailed = (summary?: string) => {
+    const value = summary?.trim() || '';
+    if (!value) return true;
+    return SUMMARY_FAILURE_MARKERS.some((marker) => value.includes(marker));
+  };
+
+  const isTranslationFailed = (translatedText?: string) => {
+    if (!translatedText?.trim()) return true;
+
+    try {
+      const parsed = JSON.parse(translatedText);
+      if (!Array.isArray(parsed) || parsed.length === 0) return true;
+
+      return !parsed.some(
+        (item) =>
+          typeof item?.zh === 'string' && item.zh.trim().length > 0
+      );
+    } catch {
+      return true;
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!article) return;
+
+    try {
+      setRetrying(true);
+      setRetryError(null);
+      setError(null);
+
+      const response = await fetch(`/api/articles/process/${article.id}`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || '重试失败');
+      }
+
+      await fetchArticle({ silent: true });
+    } catch (err) {
+      setRetryError(err instanceof Error ? err.message : '重试失败，请稍后再试');
+    } finally {
+      setRetrying(false);
     }
   };
 
@@ -102,14 +167,31 @@ export default function ArticlePage() {
                 <p className="text-zinc-600 dark:text-zinc-400">文章等待处理</p>
               )}
               {article.status === 'failed' && (
-                <p className="text-red-600 dark:text-red-400">文章处理失败</p>
+                <div className="w-full">
+                  <p className="text-red-600 dark:text-red-400 mb-4">文章处理失败</p>
+                  <button
+                    type="button"
+                    onClick={handleRetry}
+                    disabled={retrying}
+                    className="h-10 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {retrying ? '重试中...' : '重新生成 AI 摘要与翻译'}
+                  </button>
+                </div>
               )}
             </div>
+            {retryError && (
+              <p className="mt-4 text-sm text-red-600 dark:text-red-400">{retryError}</p>
+            )}
           </div>
         </div>
       </div>
     );
   }
+
+  const summaryFailed = isSummaryFailed(article.summary);
+  const translationFailed = isTranslationFailed(article.translatedText);
+  const shouldShowRetry = summaryFailed || translationFailed;
 
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
@@ -132,6 +214,25 @@ export default function ArticlePage() {
             {article.summary && (
               <div className="mt-6">
                 <ArticleSummary summary={article.summary} />
+              </div>
+            )}
+
+            {shouldShowRetry && (
+              <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
+                <p className="text-sm text-amber-700 dark:text-amber-300">
+                  AI 处理失败，可重试。
+                </p>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  disabled={retrying}
+                  className="mt-3 h-10 px-4 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors"
+                >
+                  {retrying ? '重试中...' : '重新生成 AI 摘要与翻译'}
+                </button>
+                {retryError && (
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{retryError}</p>
+                )}
               </div>
             )}
 
