@@ -36,84 +36,84 @@ export default function Home() {
 
   const getStatusBadge = (status: Article['status']) => {
     const styles = {
-      pending: 'bg-gray-500 text-white',
-      processing: 'bg-yellow-500 text-black',
-      ready: 'bg-green-500 text-white',
-      failed: 'bg-red-500 text-white',
+      pending: 'status-badge-pending',
+      processing: 'status-badge-processing',
+      ready: 'status-badge-ready',
+      failed: 'status-badge-failed',
     };
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status]}`}>
+      <span className={`status-badge ${styles[status]}`}>
         {status}
       </span>
     );
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <div className="max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-            我的文章
-          </h1>
-          <Link
-            href="/add"
-            className="flex items-center justify-center h-11 px-6 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
-          >
-            添加文章
+    <div className="space-y-5 pb-2">
+      <header className="surface-card px-4 py-4">
+        <p className="text-xs uppercase tracking-[0.14em] text-[color:var(--foreground-tertiary)]">
+          Aether Read
+        </p>
+        <div className="mt-2 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold leading-tight text-[color:var(--foreground)]">
+              我的文章
+            </h1>
+            <p className="mt-1 text-sm text-[color:var(--foreground-secondary)]">
+              移动阅读、翻译与摘要，一页完成。
+            </p>
+          </div>
+          <Link href="/add" className="btn-primary shrink-0 px-4 text-sm">
+            添加
           </Link>
         </div>
+      </header>
 
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="mt-4 text-zinc-600 dark:text-zinc-400">加载中...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && articles.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-xl text-zinc-600 dark:text-zinc-400 mb-4">
-              还没有文章
-            </p>
-            <Link
-              href="/add"
-              className="inline-flex items-center justify-center h-11 px-6 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
-            >
-              添加第一篇文章
-            </Link>
-          </div>
-        )}
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {articles.map((article) => (
-            <Link
-              key={article.id}
-              href={`/article/${article.id}`}
-              className="block bg-white dark:bg-zinc-800 rounded-lg shadow-sm hover:shadow-md transition-shadow p-5"
-            >
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 line-clamp-2 flex-1">
-                  {article.title || '无标题'}
-                </h2>
-                {getStatusBadge(article.status)}
-              </div>
-              {article.originalUrl && (
-                <p className="text-sm text-zinc-500 dark:text-zinc-400 truncate mb-2">
-                  {article.originalUrl}
-                </p>
-              )}
-              <p className="text-xs text-zinc-400 dark:text-zinc-500">
-                {new Date(article.createdAt).toLocaleString('zh-CN')}
-              </p>
-            </Link>
-          ))}
+      {loading && (
+        <div className="surface-card py-10 text-center">
+          <div className="inline-block h-7 w-7 animate-spin rounded-full border-[3px] border-solid border-[color:var(--accent)] border-r-transparent" />
+          <p className="mt-3 text-sm text-[color:var(--foreground-secondary)]">加载中...</p>
         </div>
+      )}
+
+      {error && (
+        <div className="surface-card border-[color:color-mix(in_srgb,var(--danger)_40%,var(--border))] bg-[color:color-mix(in_srgb,var(--danger)_10%,var(--background-elevated))] p-4">
+          <p className="text-sm text-[color:var(--danger)]">{error}</p>
+        </div>
+      )}
+
+      {!loading && !error && articles.length === 0 && (
+        <div className="surface-card py-10 text-center">
+          <p className="text-lg text-[color:var(--foreground-secondary)]">还没有文章</p>
+          <Link href="/add" className="btn-primary mt-4 px-5 text-sm">
+            添加第一篇文章
+          </Link>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 gap-3">
+        {articles.map((article) => (
+          <Link
+            key={article.id}
+            href={`/article/${article.id}`}
+            className="surface-card block p-4 transition-transform duration-200 hover:-translate-y-0.5"
+          >
+            <div className="mb-2 flex items-start justify-between gap-3">
+              <h2 className="line-clamp-2 flex-1 text-base font-semibold text-[color:var(--foreground)]">
+                {article.title || '无标题'}
+              </h2>
+              {getStatusBadge(article.status)}
+            </div>
+            {article.originalUrl && (
+              <p className="mb-2 truncate text-xs text-[color:var(--foreground-secondary)]">
+                {article.originalUrl}
+              </p>
+            )}
+            <p className="text-xs text-[color:var(--foreground-tertiary)]">
+              {new Date(article.createdAt).toLocaleString('zh-CN')}
+            </p>
+          </Link>
+        ))}
       </div>
     </div>
   );

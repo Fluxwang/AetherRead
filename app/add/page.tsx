@@ -99,140 +99,135 @@ export default function AddArticle() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <div className="max-w-2xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline mb-4"
-          >
-            ← 返回首页
-          </Link>
-          <h1 className="text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-            添加文章
-          </h1>
+    <div className="space-y-4">
+      <div>
+        <Link href="/" className="inline-flex items-center text-sm text-[color:var(--accent)]">
+          ← 返回首页
+        </Link>
+        <h1 className="mt-3 text-2xl font-semibold text-[color:var(--foreground)]">
+          添加文章
+        </h1>
+      </div>
+
+      <form onSubmit={handleSubmit} className="surface-card p-4">
+        <div className="mb-5">
+          <label className="mb-3 block text-sm font-medium text-[color:var(--foreground)]">
+              选择模式
+          </label>
+          <div className="space-y-2">
+            <label className="surface-muted flex cursor-pointer items-center p-3 transition-colors">
+              <input
+                type="radio"
+                name="mode"
+                value="crawler"
+                checked={inputMode === 'crawler'}
+                onChange={(e) => setInputMode(e.target.value as InputMode)}
+                className="h-4 w-4 accent-[color:var(--accent)]"
+              />
+              <div className="ml-3">
+                <div className="text-sm font-medium text-[color:var(--foreground)]">
+                  爬虫模式
+                </div>
+                <div className="text-xs text-[color:var(--foreground-secondary)]">
+                  输入文章URL，自动抓取内容
+                </div>
+              </div>
+            </label>
+
+            <label className="surface-muted flex cursor-pointer items-center p-3 transition-colors">
+              <input
+                type="radio"
+                name="mode"
+                value="paste"
+                checked={inputMode === 'paste'}
+                onChange={(e) => setInputMode(e.target.value as InputMode)}
+                className="h-4 w-4 accent-[color:var(--accent)]"
+              />
+              <div className="ml-3">
+                <div className="text-sm font-medium text-[color:var(--foreground)]">
+                  直接粘贴
+                </div>
+                <div className="text-xs text-[color:var(--foreground-secondary)]">
+                  粘贴文章内容（支持 Markdown）
+                </div>
+              </div>
+            </label>
+
+            <label className="surface-muted flex cursor-pointer items-center p-3 transition-colors">
+              <input
+                type="radio"
+                name="mode"
+                value="rss"
+                checked={inputMode === 'rss'}
+                onChange={(e) => setInputMode(e.target.value as InputMode)}
+                className="h-4 w-4 accent-[color:var(--accent)]"
+              />
+              <div className="ml-3">
+                <div className="text-sm font-medium text-[color:var(--foreground)]">
+                  RSS订阅
+                </div>
+                <div className="text-xs text-[color:var(--foreground-secondary)]">
+                  输入RSS源URL
+                </div>
+              </div>
+            </label>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white dark:bg-zinc-800 rounded-lg shadow-sm p-6">
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-zinc-900 dark:text-zinc-50 mb-3">
-              选择模式
-            </label>
-            <div className="space-y-3">
-              <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-                <input
-                  type="radio"
-                  name="mode"
-                  value="crawler"
-                  checked={inputMode === 'crawler'}
-                  onChange={(e) => setInputMode(e.target.value as InputMode)}
-                  className="h-4 w-4 text-blue-600"
-                />
-                <div className="ml-3">
-                  <div className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                    爬虫模式
-                  </div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                    输入文章URL，自动抓取内容
-                  </div>
-                </div>
-              </label>
-
-              <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-                <input
-                  type="radio"
-                  name="mode"
-                  value="paste"
-                  checked={inputMode === 'paste'}
-                  onChange={(e) => setInputMode(e.target.value as InputMode)}
-                  className="h-4 w-4 text-blue-600"
-                />
-                <div className="ml-3">
-                  <div className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                    直接粘贴
-                  </div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                    粘贴文章内容（支持 Markdown）
-                  </div>
-                </div>
-              </label>
-
-              <label className="flex items-center p-4 border rounded-lg cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">
-                <input
-                  type="radio"
-                  name="mode"
-                  value="rss"
-                  checked={inputMode === 'rss'}
-                  onChange={(e) => setInputMode(e.target.value as InputMode)}
-                  className="h-4 w-4 text-blue-600"
-                />
-                <div className="ml-3">
-                  <div className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                    RSS订阅
-                  </div>
-                  <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                    输入RSS源URL
-                  </div>
-                </div>
-              </label>
-            </div>
-          </div>
-
-          <div className="mb-6">
-            <label htmlFor="input" className="block text-sm font-medium text-zinc-900 dark:text-zinc-50 mb-2">
+        <div className="mb-5">
+          <label htmlFor="input" className="mb-2 block text-sm font-medium text-[color:var(--foreground)]">
               {inputMode === 'crawler' && 'URL'}
               {inputMode === 'paste' && '文章内容'}
               {inputMode === 'rss' && 'RSS URL'}
-            </label>
-            {inputMode === 'paste' ? (
-              <textarea
-                id="input"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                rows={10}
-                className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="粘贴文章内容（支持 Markdown）..."
-                required
-                disabled={loading}
-              />
-            ) : (
-              <input
-                id="input"
-                type="url"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={inputMode === 'crawler' ? 'https://example.com/article' : 'https://example.com/feed.xml'}
-                required
-                disabled={loading}
-              />
-            )}
+          </label>
+          {inputMode === 'paste' ? (
+            <textarea
+              id="input"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              rows={10}
+              className="focus-ring w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--background-elevated)] px-4 py-3 text-[color:var(--foreground)]"
+              placeholder="粘贴文章内容（支持 Markdown）..."
+              required
+              disabled={loading}
+            />
+          ) : (
+            <input
+              id="input"
+              type="url"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="focus-ring w-full rounded-xl border border-[color:var(--border)] bg-[color:var(--background-elevated)] px-4 py-3 text-[color:var(--foreground)]"
+              placeholder={inputMode === 'crawler' ? 'https://example.com/article' : 'https://example.com/feed.xml'}
+              required
+              disabled={loading}
+            />
+          )}
+        </div>
+
+        {error && (
+          <div className="mb-5 rounded-xl border border-[color:color-mix(in_srgb,var(--danger)_45%,var(--border))] bg-[color:color-mix(in_srgb,var(--danger)_10%,var(--background-elevated))] p-3">
+            <p className="text-sm text-[color:var(--danger)]">{error}</p>
           </div>
+        )}
 
-          {error && (
-            <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <p className="text-red-600 dark:text-red-400">{error}</p>
+        {polling && (
+          <div className="mb-5 rounded-xl border border-[color:color-mix(in_srgb,var(--accent)_40%,var(--border))] bg-[color:color-mix(in_srgb,var(--accent)_10%,var(--background-elevated))] p-3">
+            <div className="flex items-center">
+              <div className="mr-3 h-5 w-5 animate-spin rounded-full border-2 border-solid border-[color:var(--accent)] border-r-transparent" />
+              <p className="text-sm text-[color:var(--accent)]">正在处理文章，请稍候...</p>
             </div>
-          )}
+          </div>
+        )}
 
-          {polling && (
-            <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <div className="flex items-center">
-                <div className="h-5 w-5 animate-spin rounded-full border-3 border-solid border-blue-600 border-r-transparent mr-3"></div>
-                <p className="text-blue-600 dark:text-blue-400">正在处理文章，请稍候...</p>
-              </div>
-            </div>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || !input.trim()}
-            className="w-full h-12 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? '处理中...' : '提交'}
-          </button>
-        </form>
-      </div>
+        <button
+          type="submit"
+          disabled={loading || !input.trim()}
+          className="btn-primary w-full"
+        >
+          {loading ? '处理中...' : '提交'}
+        </button>
+      </form>
     </div>
   );
 }

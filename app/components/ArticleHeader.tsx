@@ -9,23 +9,23 @@ interface ArticleHeaderProps {
 export default function ArticleHeader({ title, originalUrl, createdAt }: ArticleHeaderProps) {
   return (
     <div className="space-y-3">
-      <h1 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-zinc-50 leading-tight">
+      <h1 className="text-2xl font-semibold leading-tight text-[color:var(--foreground)]">
         {title}
       </h1>
-      
-      <div className="flex flex-col gap-2 text-sm text-zinc-600 dark:text-zinc-400">
+
+      <div className="flex flex-col gap-2 text-sm text-[color:var(--foreground-secondary)]">
         {originalUrl && (
           <a
             href={originalUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-blue-600 dark:text-blue-400 hover:underline truncate"
+            className="truncate text-[color:var(--accent)] hover:underline"
           >
             {originalUrl}
           </a>
         )}
-        
-        <div className="text-xs text-zinc-500 dark:text-zinc-500">
+
+        <div className="text-xs text-[color:var(--foreground-tertiary)]">
           {new Date(createdAt).toLocaleString('zh-CN', {
             year: 'numeric',
             month: 'long',
