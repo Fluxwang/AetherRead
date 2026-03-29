@@ -1,6 +1,7 @@
 // OpenAI Translation
 import OpenAI from 'openai';
 import { getOpenAIClient, normalizeOpenAIError } from '@/lib/openai-client';
+import type { BilingualParagraph } from '@/types';
 
 const TRANSLATE_MODEL = 'gpt-4o-mini';
 const TRANSLATE_SYSTEM_PROMPT =
@@ -9,11 +10,14 @@ const TRANSLATE_SINGLE_SYSTEM_PROMPT =
   '你是一个专业的英译中翻译助手。请仅输出中文翻译结果，不要附加解释，不要保留英文原文。';
 const BATCH_SIZE = 5;
 
-export interface BilingualParagraph {
-  en: string;
-  zh: string;
-}
-
+/**
+ * Translates English article content to Chinese paragraph by paragraph
+ * Returns bilingual paragraphs with both original (en) and translated (zh) text
+ * @param content - The English article content to translate
+ * @returns Promise resolving to array of bilingual paragraph objects
+ * @throws {OpenAIQuotaError} If API quota is exceeded
+ * @throws {Error} For other API or network errors
+ */
 export async function translateContent(content: string): Promise<BilingualParagraph[]> {
   const openai = getOpenAIClient();
   const paragraphs = splitParagraphs(content);

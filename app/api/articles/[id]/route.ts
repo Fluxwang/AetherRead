@@ -1,10 +1,23 @@
-// GET /api/articles/[id] - 获取单个文章详情
-import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/prisma";
+/**
+ * GET /api/articles/[id] - 获取单个文章详情
+ * Response: { article: Article }
+ */
 
-const OWNER_TAGS = ["Wang", "LYY"] as const;
-type OwnerTag = (typeof OWNER_TAGS)[number];
+/**
+ * PATCH /api/articles/[id] - 更新文章信息
+ * Request Body: { ownerTag: "Wang" | "LYY" }
+ * Response: { article: { id, ownerTag } }
+ */
+
+/**
+ * DELETE /api/articles/[id] - 删除文章
+ * Response: { success: true }
+ */
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { handlePrismaError } from "@/lib/api-error-handler";
+import type { OwnerTag } from "@/types";
+import { OWNER_TAGS } from "@/types";
 
 function isOwnerTag(value: string | null): value is OwnerTag {
   return !!value && OWNER_TAGS.includes(value as OwnerTag);
@@ -29,11 +42,7 @@ export async function GET(
 
     return NextResponse.json({ article });
   } catch (error) {
-    console.error("Error fetching article:", error);
-    return NextResponse.json(
-      { error: "获取文章失败" },
-      { status: 500 }
-    );
+    return handlePrismaError(error, '获取文章失败');
   }
 }
 
@@ -65,19 +74,7 @@ export async function PATCH(
 
     return NextResponse.json({ article });
   } catch (error) {
-    console.error("Error updating article:", error);
-
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return NextResponse.json({ error: "文章不存在" }, { status: 404 });
-    }
-
-    return NextResponse.json(
-      { error: "更新文章失败" },
-      { status: 500 }
-    );
+    return handlePrismaError(error, '更新文章失败');
   }
 }
 
@@ -94,18 +91,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error deleting article:", error);
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return NextResponse.json(
-        { error: "文章不存在" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "删除文章失败" },
-      { status: 500 }
-    );
+    return handlePrismaError(error, '删除文章失败');
   }
 }

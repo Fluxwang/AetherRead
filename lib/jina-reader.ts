@@ -30,6 +30,13 @@ export class JinaReaderError extends Error {
 const proxyUrl = process.env.HTTPS_PROXY || process.env.https_proxy || process.env.HTTP_PROXY || process.env.http_proxy;
 const proxyAgent = proxyUrl ? new ProxyAgent(proxyUrl) : null;
 
+/**
+ * Fetches article content from a URL using Jina Reader API
+ * Returns content in Markdown format
+ * @param url - The article URL to fetch
+ * @returns Promise resolving to markdown-formatted article content
+ * @throws {JinaReaderError} If fetch fails after retries or times out
+ */
 export async function fetchArticleContent(url: string): Promise<string> {
   try {
     const response = await fetchWithRetry(url, 'application/json');
@@ -43,6 +50,12 @@ export async function fetchArticleContent(url: string): Promise<string> {
   }
 }
 
+/**
+ * Fetches article content as plain text using Jina Reader API
+ * @param url - The article URL to fetch
+ * @returns Promise resolving to plain text content
+ * @throws {JinaReaderError} If fetch fails after retries or times out
+ */
 export async function fetchArticleContentAsText(url: string): Promise<string> {
   try {
     const response = await fetchWithRetry(url, 'text/plain');

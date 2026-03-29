@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { splitParagraphs, translateParagraph, type BilingualParagraph } from '@/lib/openai-translate';
+import { splitParagraphs, translateParagraph } from '@/lib/openai-translate';
+import type { BilingualParagraph } from '@/types';
 
 export const runtime = 'nodejs';
 

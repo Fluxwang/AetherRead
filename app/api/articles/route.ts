@@ -1,11 +1,29 @@
-// GET /api/articles - 获取所有文章列表
+/**
+ * GET /api/articles - 获取文章列表
+ * 
+ * Query Parameters:
+ * - ownerTag: "Wang" | "LYY" - 按用户筛选
+ * - read: "all" | "read" | "unread" - 按已读状态筛选
+ * 
+ * Response: { articles: Article[] }
+ */
+
+/**
+ * POST /api/articles - 创建新文章
+ * 
+ * Request Body:
+ * - url?: string - 文章URL（爬虫模式）
+ * - content?: string - 文章内容（粘贴模式）
+ * - sourceType: "crawler" | "manual" | "rss"
+ * - ownerTag: "Wang" | "LYY"
+ * 
+ * Response: { article: Article }
+ */
 import { NextRequest, NextResponse } from "next/server";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-
-const OWNER_TAGS = ["Wang", "LYY"] as const;
-type OwnerTag = (typeof OWNER_TAGS)[number];
-type ReadFilter = "all" | "read" | "unread";
+import type { OwnerTag, ReadFilter } from "@/types";
+import { OWNER_TAGS } from "@/types";
 
 function isOwnerTag(value: string | null): value is OwnerTag {
   return !!value && OWNER_TAGS.includes(value as OwnerTag);

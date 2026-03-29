@@ -2,8 +2,8 @@
 
 interface ArticleHeaderProps {
   title: string;
-  originalUrl?: string;
-  createdAt: string;
+  originalUrl?: string | null;
+  createdAt: string | Date;
 }
 
 export default function ArticleHeader({ title, originalUrl, createdAt }: ArticleHeaderProps) {

@@ -105,7 +105,15 @@ export async function markArticleFetchFailed(id: string, summary: string): Promi
   });
 }
 
-async function runWithFallback<T>(
+/**
+ * Executes a task with fallback on error
+ * @param task - The async task to execute
+ * @param logPrefix - Prefix for error logging
+ * @param fallback - Fallback value if task fails
+ * @param onError - Optional error handler callback
+ * @returns Task result or fallback value
+ */
+export async function runWithFallback<T>(
   task: () => Promise<T>,
   logPrefix: string,
   fallback: T,

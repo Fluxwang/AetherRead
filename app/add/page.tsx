@@ -4,10 +4,15 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ThemeToggle from '@/app/components/ThemeToggle';
+import type { OwnerTag, InputMode } from '@/types';
+import { OWNER_TAGS } from '@/types';
 
-type InputMode = 'crawler' | 'paste' | 'rss';
-const OWNER_TAGS = ['Wang', 'LYY'] as const;
-type OwnerTag = (typeof OWNER_TAGS)[number];
+interface ArticlePayload {
+  sourceType: 'manual' | 'crawler' | 'rss';
+  ownerTag: OwnerTag;
+  content?: string;
+  url?: string;
+}
 
 export default function AddArticle() {
   const router = useRouter();
@@ -23,7 +28,7 @@ export default function AddArticle() {
     setLoading(true);
 
     try {
-      const payload: Record<string, string> = {
+      const payload: ArticlePayload = {
         sourceType: inputMode === 'paste' ? 'manual' : inputMode,
         ownerTag,
       };

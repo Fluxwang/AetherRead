@@ -1,7 +1,7 @@
 // PATCH /api/articles/[id]/read - 标记文章已读/未读
 import { NextRequest, NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { handlePrismaError } from "@/lib/api-error-handler";
 
 export async function PATCH(
   request: NextRequest,
@@ -34,18 +34,6 @@ export async function PATCH(
 
     return NextResponse.json({ article });
   } catch (error) {
-    console.error("Error updating read status:", error);
-
-    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
-      return NextResponse.json(
-        { error: "文章不存在" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "更新已读状态失败" },
-      { status: 500 }
-    );
+    return handlePrismaError(error, '更新已读状态失败');
   }
 }

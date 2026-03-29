@@ -62,7 +62,10 @@ function getErrorMessage(error: unknown): string {
 }
 
 function getErrorStatus(error: unknown): number | null {
-  const anyError = error as { status?: number; statusCode?: number };
-  const status = anyError?.status ?? anyError?.statusCode;
+  const errorWithStatus = error as { status?: number; statusCode?: number } | null | undefined;
+  if (!errorWithStatus || typeof errorWithStatus !== 'object') {
+    return null;
+  }
+  const status = errorWithStatus.status ?? errorWithStatus.statusCode;
   return typeof status === 'number' ? status : null;
 }

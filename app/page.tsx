@@ -3,21 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import ThemeToggle from "@/app/components/ThemeToggle";
-
-const OWNER_TAGS = ["Wang", "LYY"] as const;
-type OwnerTag = (typeof OWNER_TAGS)[number];
-type ReadFilter = "all" | "read" | "unread";
-
-interface Article {
-  id: string;
-  title: string;
-  status: "pending" | "processing" | "ready" | "failed";
-  createdAt: string;
-  originalUrl?: string;
-  ownerTag: OwnerTag;
-  isRead: boolean;
-  readAt?: string | null;
-}
+import type { Article, OwnerTag, ReadFilter } from "@/types";
+import { OWNER_TAGS } from "@/types";
 
 const readFilterLabels: Record<ReadFilter, string> = {
   all: "全部",

@@ -4,33 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import ArticleHeader from "@/app/components/ArticleHeader";
-import ArticleSummary from "@/app/components/ArticleSummary";
 import ReadingModeToggle from "@/app/components/ReadingModeToggle";
 import ArticleContent from "@/app/components/ArticleContent";
 import ThemeToggle from "@/app/components/ThemeToggle";
-
-const OWNER_TAGS = ["Wang", "LYY"] as const;
-type OwnerTag = "Wang" | "LYY";
-type TranslationStatus = "not_started" | "processing" | "ready" | "failed";
-
-interface Article {
-  id: string;
-  title: string;
-  status: "pending" | "processing" | "ready" | "failed";
-  originalUrl?: string;
-  ownerTag: OwnerTag;
-  isRead: boolean;
-  readAt?: string | null;
-  originalContent?: string;
-  translatedText?: string;
-  summary?: string;
-  translationStatus?: TranslationStatus;
-  translationError?: string | null;
-  createdAt: string;
-}
-
-type ReadingMode = "english" | "bilingual" | "chinese";
-const SUMMARY_FAILURE_MARKERS = ["无法生成摘要", "处理失败", "爬取失败"];
+import type { Article, OwnerTag, ReadingMode, TranslationStatus } from "@/types";
+import { OWNER_TAGS } from "@/types";
 
 function normalizeTranslationStatus(value?: string): TranslationStatus {
   if (value === "processing" || value === "ready" || value === "failed") {
@@ -39,7 +17,7 @@ function normalizeTranslationStatus(value?: string): TranslationStatus {
   return "not_started";
 }
 
-function getTranslatedCount(translatedText?: string): number {
+function getTranslatedCount(translatedText?: string | null): number {
   if (!translatedText?.trim()) {
     return 0;
   }
@@ -70,7 +48,6 @@ export default function ArticlePage() {
   const [retryError, setRetryError] = useState<string | null>(null);
   const [updatingOwnerTag, setUpdatingOwnerTag] = useState(false);
   const [ownerTagError, setOwnerTagError] = useState<string | null>(null);
-  const [updatingReadState, setUpdatingReadState] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translationError, setTranslationError] = useState<string | null>(null);
   const [translationProgress, setTranslationProgress] = useState<{
@@ -175,12 +152,6 @@ export default function ArticlePage() {
       cancelled = true;
     };
   }, [article]);
-
-  const isSummaryFailed = (summary?: string) => {
-    const value = summary?.trim() || "";
-    if (!value) return true;
-    return SUMMARY_FAILURE_MARKERS.some((marker) => value.includes(marker));
-  };
 
   const handleRetryFetch = async () => {
     if (!article) return;
@@ -347,41 +318,7 @@ export default function ArticlePage() {
     };
   };
 
-  const handleToggleRead = async () => {
-    if (!article) return;
 
-    try {
-      setUpdatingReadState(true);
-      const nextReadState = !article.isRead;
-      const response = await fetch(`/api/articles/${article.id}/read`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isRead: nextReadState }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "更新已读状态失败");
-      }
-
-      const data = await response.json();
-      setArticle((prev) =>
-        prev
-          ? {
-              ...prev,
-              isRead: data.article?.isRead ?? nextReadState,
-              readAt:
-                data.article?.readAt ??
-                (nextReadState ? new Date().toISOString() : null),
-            }
-          : prev,
-      );
-    } catch (err) {
-      setRetryError(err instanceof Error ? err.message : "更新已读状态失败");
-    } finally {
-      setUpdatingReadState(false);
-    }
-  };
 
   const handleChangeOwnerTag = async (nextOwnerTag: OwnerTag) => {
     if (!article || article.ownerTag === nextOwnerTag) {
@@ -565,8 +502,6 @@ export default function ArticlePage() {
       </div>
     );
   }
-
-  const summaryFailed = isSummaryFailed(article.summary);
 
   return (
     <div className="space-y-4">

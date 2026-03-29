@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { translateContent } from '@/lib/openai-translate';
-import { ArticleWorkflowError, fetchAndSummarizeArticle } from '@/lib/article-fetch';
+import { ArticleWorkflowError, fetchAndSummarizeArticle, runWithFallback } from '@/lib/article-fetch';
 
 export async function POST(
   _request: NextRequest,
@@ -44,15 +44,6 @@ export async function POST(
     }
 
     return NextResponse.json({ error: '处理文章失败' }, { status: 500 });
-  }
-}
-
-async function runWithFallback<T>(task: () => Promise<T>, logPrefix: string, fallback: T): Promise<T> {
-  try {
-    return await task();
-  } catch (error) {
-    console.error(`${logPrefix}:`, error);
-    return fallback;
   }
 }
 
