@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
+
+type ThemeMode = "light" | "dark";
+const THEME_STORAGE_KEY = "aether-theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,30 +28,26 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-const themeInitScript = `
-  (function () {
-    try {
-      var theme = localStorage.getItem('aether-theme');
-      if (theme === 'light' || theme === 'dark') {
-        document.documentElement.setAttribute('data-theme', theme);
-      }
-    } catch (e) {}
-  })();
-`;
+function parseThemeMode(theme: string | undefined): ThemeMode | undefined {
+  return theme === "light" || theme === "dark" ? theme : undefined;
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const themeFromCookie = parseThemeMode(
+    cookieStore.get(THEME_STORAGE_KEY)?.value,
+  );
+
   return (
     <html
       lang="zh-CN"
+      data-theme={themeFromCookie}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
-      </head>
       <body className="min-h-full">
         <div className="mobile-shell">{children}</div>
       </body>

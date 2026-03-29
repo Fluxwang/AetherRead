@@ -1,6 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
+
 const THEME_STORAGE_KEY = "aether-theme";
+const ONE_YEAR_SECONDS = 60 * 60 * 24 * 365;
 type ThemeMode = "light" | "dark";
 
 function getSystemTheme(): ThemeMode {
@@ -11,6 +14,17 @@ function getSystemTheme(): ThemeMode {
 }
 
 export default function ThemeToggle() {
+  useEffect(() => {
+    const currentThemeAttr = document.documentElement.getAttribute("data-theme");
+    if (currentThemeAttr === "light" || currentThemeAttr === "dark") return;
+
+    const storedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme === "light" || storedTheme === "dark") {
+      document.documentElement.setAttribute("data-theme", storedTheme);
+      document.cookie = `${THEME_STORAGE_KEY}=${storedTheme}; Path=/; Max-Age=${ONE_YEAR_SECONDS}; SameSite=Lax`;
+    }
+  }, []);
+
   const handleToggle = () => {
     const currentThemeAttr =
       document.documentElement.getAttribute("data-theme");
@@ -22,6 +36,7 @@ export default function ThemeToggle() {
 
     document.documentElement.setAttribute("data-theme", nextTheme);
     localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    document.cookie = `${THEME_STORAGE_KEY}=${nextTheme}; Path=/; Max-Age=${ONE_YEAR_SECONDS}; SameSite=Lax`;
   };
 
   return (
