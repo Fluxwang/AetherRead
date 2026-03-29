@@ -152,7 +152,7 @@ export default function AddArticle() {
                     直接粘贴
                   </div>
                   <div className="text-xs text-zinc-500 dark:text-zinc-400">
-                    粘贴文章内容
+                    粘贴文章内容（支持 Markdown）
                   </div>
                 </div>
               </label>
@@ -191,7 +191,7 @@ export default function AddArticle() {
                 onChange={(e) => setInput(e.target.value)}
                 rows={10}
                 className="w-full px-4 py-3 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-700 text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="粘贴文章内容..."
+                placeholder="粘贴文章内容（支持 Markdown）..."
                 required
                 disabled={loading}
               />
