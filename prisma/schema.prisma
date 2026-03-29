@@ -1,0 +1,27 @@
+// This is your Prisma schema file
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Article {
+  id              String   @id @default(cuid())
+  title           String
+  originalUrl     String?
+  sourceType      String   // "crawler", "manual", "rss"
+  originalContent String
+  summary         String?
+  translatedText  String?
+  status          String   @default("pending") // "pending", "processing", "ready", "failed"
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
