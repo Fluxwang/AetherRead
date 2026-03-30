@@ -7,8 +7,28 @@ import ArticleHeader from "@/app/components/ArticleHeader";
 import ReadingModeToggle from "@/app/components/ReadingModeToggle";
 import ArticleContent from "@/app/components/ArticleContent";
 import ThemeToggle from "@/app/components/ThemeToggle";
-import type { Article, OwnerTag, ReadingMode, TranslationStatus } from "@/types";
-import { OWNER_TAGS } from "@/types";
+
+const OWNER_TAGS = ["Wang", "LYY"] as const;
+type OwnerTag = "Wang" | "LYY";
+type TranslationStatus = "not_started" | "processing" | "ready" | "failed";
+
+interface Article {
+  id: string;
+  title: string;
+  status: "pending" | "processing" | "ready" | "failed";
+  originalUrl?: string;
+  ownerTag: OwnerTag;
+  isRead: boolean;
+  readAt?: string | null;
+  originalContent?: string;
+  translatedText?: string;
+  summary?: string;
+  translationStatus?: TranslationStatus;
+  translationError?: string | null;
+  createdAt: string;
+}
+
+type ReadingMode = "english" | "bilingual" | "chinese";
 
 function normalizeTranslationStatus(value?: string): TranslationStatus {
   if (value === "processing" || value === "ready" || value === "failed") {
@@ -17,7 +37,7 @@ function normalizeTranslationStatus(value?: string): TranslationStatus {
   return "not_started";
 }
 
-function getTranslatedCount(translatedText?: string | null): number {
+function getTranslatedCount(translatedText?: string): number {
   if (!translatedText?.trim()) {
     return 0;
   }
@@ -317,8 +337,6 @@ export default function ArticlePage() {
       closeCurrentSource();
     };
   };
-
-
 
   const handleChangeOwnerTag = async (nextOwnerTag: OwnerTag) => {
     if (!article || article.ownerTag === nextOwnerTag) {
