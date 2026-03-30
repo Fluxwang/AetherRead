@@ -1,0 +1,15 @@
+services:
+  aether-read:
+    image: aether-read:v0.0.1
+    container_name: aether-read
+    restart: always
+    ports:
+      - "3001:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: file:/app/prisma/dev.db
+    volumes:
+      - ./prisma:/app/prisma
