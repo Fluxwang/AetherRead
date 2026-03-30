@@ -36,7 +36,6 @@ yarn-error.log*
 # database
 *.db
 *.db-journal
-/prisma/migrations
 
 # vercel
 .vercel
@@ -46,4 +45,5 @@ yarn-error.log*
 next-env.d.ts
 
 Tut.md
+deploy.md
 
